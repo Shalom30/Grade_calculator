@@ -63,7 +63,6 @@ class ExcelService {
     final excel = Excel.createExcel();
     final sheet = excel['Results'];
 
-    // Header row
     final headers = [
       'Student Name', 'CA Mark', 'Exam Mark',
       'Final Mark', 'Grade', 'GPA',
@@ -73,7 +72,6 @@ class ExcelService {
       final cell = sheet.cell(
         CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 0),
       );
-      // FIX: value must be a CellValue, not a TextSpan
       cell.value = TextCellValue(headers[col]);
       cell.cellStyle = CellStyle(
         bold: true,
@@ -82,7 +80,6 @@ class ExcelService {
       );
     }
 
-    // Data rows
     for (int i = 0; i < students.length; i++) {
       final s = students[i];
       final rowIndex = i + 1;
@@ -130,7 +127,7 @@ class ExcelService {
     if (val == null) return 0.0;
     if (val is IntCellValue)    return val.value.toDouble();
     if (val is DoubleCellValue) return val.value;
-    if (val is TextCellValue)   return double.tryParse(val.value) ?? 0.0;
+  if (val is TextCellValue)   return double.tryParse(val.value.toString()) ?? 0.0;
     return double.tryParse(val.toString()) ?? 0.0;
   }
 }

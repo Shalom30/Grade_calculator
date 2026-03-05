@@ -12,7 +12,6 @@ import '../services/excel_service.dart';
 import '../services/pdf_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/grade_badge.dart';
-import '../widgets/stat_card.dart';
 
 class ResultsScreen extends StatefulWidget {
   final List<Student> students;
@@ -23,14 +22,13 @@ class ResultsScreen extends StatefulWidget {
 }
 
 class _ResultsScreenState extends State<ResultsScreen> {
-  String _sortField  = 'name';
-  bool   _sortAsc    = true;
+  String _sortField   = 'name';
+  bool   _sortAsc     = true;
   String _searchQuery = '';
   bool   _isExporting = false;
 
-  // ✅ DELAYED INIT — late fields assigned in initState()
+  // ✅ DELAYED INIT
   late final double _avgMark;
-  late final double _avgGpa;
   late final int    _passed;
   late final int    _failed;
 
@@ -42,23 +40,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   void _computeStats() {
     final s = widget.students;
-    if (s.isEmpty) {
-      _avgMark = 0; _avgGpa = 0; _passed = 0; _failed = 0;
-      return;
-    }
-    // ✅ LAMBDA — reduce() sums with an anonymous function
+    if (s.isEmpty) { _avgMark = 0; _passed = 0; _failed = 0; return; }
     _avgMark = s.map((x) => x.finalMark).reduce((a, b) => a + b) / s.length;
-    _avgGpa  = s.map((x) => x.gpa).reduce((a, b) => a + b) / s.length;
     _passed  = s.where((x) => x.finalMark >= 40).length;
     _failed  = s.length - _passed;
   }
 
-  // ── Sorted + filtered list ──────────────────────────────────
   List<Student> get _filteredStudents {
     var list = widget.students
         .where((s) => s.name.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
-
     list.sort((a, b) {
       int cmp;
       switch (_sortField) {
@@ -74,7 +65,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return list;
   }
 
-  // ── Export helpers ──────────────────────────────────────────
   Future<void> _exportExcel() async {
     final path = await FilePicker.platform.saveFile(
       dialogTitle: 'Save Results as Excel',
@@ -148,7 +138,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     });
   }
 
-  // ── BUILD ─────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,7 +165,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  // ── Top bar ──────────────────────────────────────────────────
   Widget _buildTopBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
@@ -210,8 +198,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
           if (_isExporting)
             const Padding(
               padding: EdgeInsets.only(right: 16),
-              child: SizedBox(width: 20, height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accent)),
+              child: SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppTheme.accent),
+              ),
             ),
           OutlinedButton.icon(
             onPressed: _isExporting ? null : _exportExcel,
@@ -221,7 +212,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
               foregroundColor: AppTheme.success,
               side: const BorderSide(color: AppTheme.success),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
           const SizedBox(width: 12),
@@ -233,7 +225,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
               foregroundColor: AppTheme.danger,
               side: const BorderSide(color: AppTheme.danger),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ],
@@ -241,8 +234,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  // ── Stat cards ───────────────────────────────────────────────
-  // FIX: StatCard is now properly imported and used as a widget
   Widget _buildStatCards() {
     return GridView.count(
       crossAxisCount: 4,
@@ -252,25 +243,25 @@ class _ResultsScreenState extends State<ResultsScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        StatCard(
+        _StatCard(
           label: 'Total Students',
           value: '${widget.students.length}',
           icon: Icons.people_rounded,
           color: AppTheme.accent,
         ),
-        StatCard(
+        _StatCard(
           label: 'Average Mark',
           value: '${_avgMark.toStringAsFixed(1)}%',
           icon: Icons.trending_up_rounded,
           color: AppTheme.accentLight,
         ),
-        StatCard(
+        _StatCard(
           label: 'Passed',
           value: '$_passed',
           icon: Icons.check_circle_rounded,
           color: AppTheme.success,
         ),
-        StatCard(
+        _StatCard(
           label: 'Failed',
           value: '$_failed',
           icon: Icons.cancel_rounded,
@@ -280,7 +271,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.1);
   }
 
-  // ── Table header + search ────────────────────────────────────
   Widget _buildTableHeader() {
     return Row(
       children: [
@@ -308,10 +298,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  // ── Results table ────────────────────────────────────────────
   Widget _buildTable() {
     final students = _filteredStudents;
-
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surface,
@@ -347,7 +335,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
       ('Grade',      'grade', 100.0),
       ('GPA',        'gpa',    90.0),
     ];
-
     return Container(
       color: AppTheme.surfaceAlt,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -383,9 +370,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Widget _tableDataRow(Student s, int index) {
-    final isEven = index.isEven;
     return Container(
-      color: isEven
+      color: index.isEven
           ? Colors.transparent
           : AppTheme.surfaceAlt.withValues(alpha: 0.4),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -394,33 +380,38 @@ class _ResultsScreenState extends State<ResultsScreen> {
           SizedBox(
             width: 60,
             child: Text('${index + 1}',
-                style: const TextStyle(color: AppTheme.textSecond, fontSize: 12)),
+                style: const TextStyle(
+                    color: AppTheme.textSecond, fontSize: 12)),
           ),
           SizedBox(
             width: 200,
             child: Text(s.name,
                 style: GoogleFonts.inter(
                   color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w500, fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
                 ),
                 overflow: TextOverflow.ellipsis),
           ),
           SizedBox(
             width: 100,
             child: Text(s.caMark.toStringAsFixed(1),
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                style: const TextStyle(
+                    color: AppTheme.textPrimary, fontSize: 13)),
           ),
           SizedBox(
             width: 110,
             child: Text(s.examMark.toStringAsFixed(1),
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                style: const TextStyle(
+                    color: AppTheme.textPrimary, fontSize: 13)),
           ),
           SizedBox(
             width: 120,
             child: Text(s.finalMark.toStringAsFixed(2),
                 style: GoogleFonts.inter(
                   color: AppTheme.accentLight,
-                  fontWeight: FontWeight.w600, fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 )),
           ),
           SizedBox(width: 100, child: GradeBadge(grade: s.grade)),
@@ -429,8 +420,77 @@ class _ResultsScreenState extends State<ResultsScreen> {
             child: Text(s.gpa.toStringAsFixed(1),
                 style: TextStyle(
                   color: AppTheme.gradeColor(s.grade),
-                  fontWeight: FontWeight.w600, fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 )),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+//  _StatCard — private widget defined right here in this file
+//  so there is NO external import needed at all.
+// ============================================================
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            value,
+            style: GoogleFonts.rajdhani(
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textSecond,
+              fontSize: 12,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),
